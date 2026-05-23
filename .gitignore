@@ -23,17 +23,44 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Virtual Environment
+# Virtual environments
 venv/
 ENV/
 env/
-.venv
+.venv/
+backend/venv/
 
-# Django
+# Django / backend runtime
 *.log
 local_settings.py
 /media
 /staticfiles
+backend/.pytest_cache/
+backend/test_db.sqlite3
+backend/*.sqlite3
+backend/out_*.txt
+
+# Frontend / Node / Vite
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/*.local
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+backend/.env
+backend/.env.*
+
+# Project artifacts
+login.json
+logout.json
+register.json
+RAPPORT_ANALYSE.md
+SECURITY_AUDIT.md
+projet_Banque.odt
 
 # PostgreSQL
 .psql_history
@@ -44,14 +71,8 @@ local_settings.py
 *.swp
 *.swo
 *~
-.DS_Store
 *.sublime-workspace
 *.sublime-project
-
-# Environment variables
-.env
-.env.local
-.env.*.local
 
 # OS
 .DS_Store
