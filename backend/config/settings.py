@@ -149,6 +149,8 @@ REST_FRAMEWORK = {
 # CORS
 # -------------------
 
+CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
     default=(

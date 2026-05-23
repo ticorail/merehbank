@@ -3,6 +3,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from rest_framework import status
@@ -149,6 +150,8 @@ class AccountModelTests(TestCase):
 
 
 class BankingApiTests(APITestCase):
+    refresh_cookie_name = 'merehbank_refresh_token'
+
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(username='apiuser', password='secret12345')
@@ -266,16 +269,23 @@ class BankingApiTests(APITestCase):
 
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
         self.assertIn('access', login_response.data)
-        self.assertIn('refresh', login_response.data)
+        self.assertNotIn('refresh', login_response.data)
+        self.assertIn(self.refresh_cookie_name, login_response.cookies)
+        self.assertTrue(login_response.cookies[self.refresh_cookie_name]['httponly'])
+        self.assertEqual(login_response.cookies[self.refresh_cookie_name]['path'], '/')
+        if settings.DEBUG:
+            self.assertFalse(login_response.cookies[self.refresh_cookie_name]['secure'])
+        else:
+            self.assertTrue(login_response.cookies[self.refresh_cookie_name]['secure'])
 
         refresh_response = self.client.post(
             '/token/refresh',
-            {'refresh': login_response.data['refresh']},
             format='json',
         )
 
         self.assertEqual(refresh_response.status_code, status.HTTP_200_OK)
         self.assertIn('access', refresh_response.data)
+        self.assertNotIn('refresh', refresh_response.data)
 
     def test_login_with_unknown_email_returns_generic_error(self):
         login_response = self.client.post(
@@ -307,6 +317,7 @@ class BankingApiTests(APITestCase):
 
         self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
         self.assertTrue(RevokedAccessToken.objects.filter(jti=AccessToken(access)['jti']).exists())
+        self.assertIn(self.refresh_cookie_name, logout_response.cookies)
 
         revoked_response = self.client.get('/account')
         self.assertEqual(revoked_response.status_code, status.HTTP_401_UNAUTHORIZED)
