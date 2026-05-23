@@ -18,6 +18,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from django.conf import settings
 
 from .models import Account, MoneyRequest, Notification, RevokedAccessToken, Transaction
 from .serializers import (
@@ -57,15 +58,57 @@ class RegisterView(CreateAPIView):
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
+    refresh_cookie_name = 'merehbank_refresh_token'
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+        response = Response(
+            {
+                'access': serializer.validated_data['access'],
+                'user': serializer.validated_data['user'],
+            },
+            status=status.HTTP_200_OK,
+        )
+        response.set_cookie(
+            self.refresh_cookie_name,
+            serializer.validated_data['refresh'],
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite='Lax',
+            path='/',
+        )
+        return response
 
 
 class RefreshView(TokenRefreshView):
     permission_classes = [permissions.AllowAny]
+    refresh_cookie_name = 'merehbank_refresh_token'
+
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.data.get('refresh') or request.COOKIES.get(self.refresh_cookie_name)
+        if not refresh_token:
+            return Response(
+                {'detail': 'Refresh token required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = self.get_serializer(data={'refresh': refresh_token})
+        serializer.is_valid(raise_exception=True)
+
+        response = Response(serializer.validated_data, status=status.HTTP_200_OK)
+        next_refresh = serializer.validated_data.get('refresh')
+        if next_refresh:
+            response.set_cookie(
+                self.refresh_cookie_name,
+                next_refresh,
+                httponly=True,
+                secure=not settings.DEBUG,
+                samesite='Lax',
+                path='/',
+            )
+        return response
 
 
 class LogoutView(APIView):
@@ -75,9 +118,10 @@ class LogoutView(APIView):
     If blacklist support isn't enabled, behaviour is best-effort and returns success.
     """
     permission_classes = [permissions.AllowAny]
+    refresh_cookie_name = 'merehbank_refresh_token'
 
     def post(self, request):
-        refresh_token = request.data.get('refresh')
+        refresh_token = request.data.get('refresh') or request.COOKIES.get(self.refresh_cookie_name)
         access_token = self._extract_access_token(request)
 
         if not refresh_token and not access_token:
@@ -107,7 +151,9 @@ class LogoutView(APIView):
             except TokenError:
                 return Response({'detail': 'Invalid refresh token.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'detail': 'Logged out.'}, status=status.HTTP_200_OK)
+        response = Response({'detail': 'Logged out.'}, status=status.HTTP_200_OK)
+        response.delete_cookie(self.refresh_cookie_name, path='/')
+        return response
 
     def _extract_access_token(self, request):
         auth_header = request.headers.get('Authorization', '')
