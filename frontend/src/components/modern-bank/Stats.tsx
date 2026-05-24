@@ -1,7 +1,7 @@
 const stats = [
   { value: '50+', label: 'Années d\'expérience' },
   { value: '500K+', label: 'Clients satisfaits' },
-  { value: '120', label: 'Agences en France' },
+  { value: '120', label: 'Agences en Haïti' },
   { value: '98%', label: 'Taux de satisfaction' },
 ]
 
