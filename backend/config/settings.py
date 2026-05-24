@@ -159,9 +159,8 @@ CORS_ALLOWED_ORIGINS = config(
         "http://localhost:3001,"
         "http://127.0.0.1:3001,"
         "http://localhost:5173,"
-        "http://127.0.0.1:5173"
-        "https://merehbank.vercel.app",
-        "https://merehbank.onrender.com"
+        "http://127.0.0.1:5173,"
+        "https://merehbank.vercel.app"
     ),
     cast=lambda v: [s.strip() for s in v.split(",")]
 )
