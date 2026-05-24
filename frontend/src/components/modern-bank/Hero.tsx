@@ -14,8 +14,8 @@ export default function Hero() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-full mb-8">
             <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-muted-foreground">
-              Plus de 50 ans d&apos;excellence bancaire
+              <span className="text-sm font-medium text-muted-foreground">
+              Banque jeune et ambitieuse
             </span>
           </div>
 

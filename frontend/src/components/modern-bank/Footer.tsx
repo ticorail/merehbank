@@ -12,7 +12,7 @@ export default function Footer() {
               <span className="font-serif text-xl font-semibold">Banque Mereh</span>
             </a>
             <p className="text-background/70 text-sm leading-relaxed">
-              Votre partenaire financier de confiance depuis plus de 50 ans.
+              Votre partenaire financier de confiance en Haïti.
             </p>
           </div>
 
